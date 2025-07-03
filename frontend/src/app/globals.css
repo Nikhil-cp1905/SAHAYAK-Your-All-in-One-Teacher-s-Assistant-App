@@ -77,6 +77,11 @@ body {
     --sidebar-ring: 182 25% 50%;
   }
 }
+/* Hide Next.js dev overlay toggle */
+#__next-route-announcer,
+[data-next-overlay] {
+  display: none !important;
+}
 
 @layer base {
   * {

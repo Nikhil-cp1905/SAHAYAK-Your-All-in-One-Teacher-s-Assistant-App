@@ -4,7 +4,7 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Loader2, Volume2, FileDown } from 'lucide-react';
+import { Loader2, Volume2, FileDown, Sparkles, FlaskConical } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 import { Button } from '@/components/ui/button';
@@ -23,9 +23,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TriangleAlert } from 'lucide-react';
 
 const formSchema = z.object({
-  topic: z.string().min(3, { message: 'Topic must be at least 3 characters.' }),
-  gradeLevel: z.string().min(1, { message: 'Grade Level is required.' }),
-  learningObjectives: z.string().min(10, { message: 'Please provide learning objectives.' }),
+  topic: z.string().min(3, { message: 'Please enter at least 3 characters' }),
+  gradeLevel: z.string().min(1, { message: 'Please select a grade level' }),
+  learningObjectives: z.string().min(10, { message: 'Please describe what students should learn' }),
 });
 
 export default function ExperimentInstructionsPage() {
@@ -56,8 +56,8 @@ export default function ExperimentInstructionsPage() {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Error generating instructions',
-        description: error instanceof Error ? error.message : String(error),
+        title: 'Oops! Something went wrong',
+        description: 'We couldn\'t create your experiment instructions. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -87,10 +87,10 @@ export default function ExperimentInstructionsPage() {
       const result = await generateVoiceScript(text);
       setAudioUrl(result.media);
     } catch (error) {
-       toast({
+      toast({
         variant: 'destructive',
-        title: 'Error generating audio',
-        description: error instanceof Error ? error.message : String(error),
+        title: 'Audio Error',
+        description: 'Couldn\'t create the audio version. Please try again.',
       });
     } finally {
       setIsAudioLoading(false);
@@ -106,16 +106,29 @@ export default function ExperimentInstructionsPage() {
   return (
     <MainLayout>
       <PageHeader
-        title="Experiment Instructions Generator"
-        description="Generate simple and safe scientific experiment instructions for students."
+        title={
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+              <FlaskConical className="h-6 w-6" />
+            </div>
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Science Lab Helper
+            </span>
+          </div>
+        }
+        description="Create safe and fun science experiments for your students"
       />
+      
       <div className="grid gap-8 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Experiment Details</CardTitle>
-            <CardDescription>Fill in the details to generate instructions.</CardDescription>
+        {/* Left Column - Input Form */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-lg">
+            <CardTitle className="text-white">Plan Your Experiment</CardTitle>
+            <CardDescription className="text-blue-100">
+              Fill in the details to create your science activity
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 space-y-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -123,99 +136,158 @@ export default function ExperimentInstructionsPage() {
                   name="topic"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Topic</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">What's the experiment about?</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Volcano Eruption" {...field} />
+                        <Input 
+                          placeholder="Example: Baking soda volcano, plant growth..."
+                          className="border-gray-300 focus:border-blue-500"
+                          {...field} 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="gradeLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Grade Level</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">For which grade?</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 4th Grade" {...field} />
+                        <Input 
+                          placeholder="Example: 5th Grade, Middle School..."
+                          className="border-gray-300 focus:border-blue-500"
+                          {...field} 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="learningObjectives"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Learning Objectives</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">What should students learn?</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Describe what students should learn from the experiment." {...field} />
+                        <Textarea 
+                          placeholder="Describe the scientific concepts students will explore..."
+                          className="min-h-[100px] border-gray-300 focus:border-blue-500"
+                          {...field} 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Generate Instructions
+                
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Creating Your Experiment...
+                    </>
+                  ) : (
+                    'Make My Science Activity!'
+                  )}
                 </Button>
               </form>
             </Form>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col">
-          <CardHeader className="flex-row items-start justify-between">
-            <div className="flex-1">
-              <CardTitle>Generated Instructions</CardTitle>
-              <CardDescription>The AI-generated instructions will appear here.</CardDescription>
-            </div>
-             {instructions && <div className="flex items-center gap-2">
-                <Button onClick={handlePlayAudio} disabled={isAudioLoading || isLoading} variant="outline" size="icon">
-                    {isAudioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
-                <Button onClick={handleDownloadPdf} disabled={isLoading} variant="outline" size="icon">
-                    <FileDown className="h-4 w-4" />
-                </Button>
-            </div>}
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <ScrollArea className="h-[600px] w-full rounded-md border p-4">
-              {isLoading && (
-                <div className="space-y-4">
-                  <Skeleton className="h-8 w-3/4" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-              )}
+        {/* Right Column - Results */}
+        <Card className="border-0 shadow-lg h-full">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-white">Your Experiment</CardTitle>
+                <CardDescription className="text-blue-100">
+                  {instructions ? 'Ready for the lab!' : 'Will appear here'}
+                </CardDescription>
+              </div>
               {instructions && (
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <h2 className='font-headline'>{instructions.title}</h2>
-                  <h3>Materials</h3>
-                  <p>{instructions.materials}</p>
-                  <h3>Instructions</h3>
-                  <p>{instructions.instructions}</p>
-                  <Alert variant="destructive" className="mt-4">
-                    <TriangleAlert className="h-4 w-4" />
-                    <AlertTitle>Safety Precautions</AlertTitle>
-                    <AlertDescription>
-                      {instructions.safetyPrecautions}
-                    </AlertDescription>
-                  </Alert>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handlePlayAudio} 
+                    disabled={isAudioLoading}
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/20 hover:bg-white/30 text-white"
+                  >
+                    {isAudioLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Volume2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={handleDownloadPdf}
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/20 hover:bg-white/30 text-white"
+                  >
+                    <FileDown className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
-              {!isLoading && !instructions && (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-muted-foreground">Your instructions will be shown here.</p>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 h-full">
+            <ScrollArea className="h-[600px] w-full p-4">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full space-y-4">
+                  <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+                  <p className="text-gray-600">Preparing your experiment...</p>
+                  <p className="text-gray-500 text-sm">This might take a moment</p>
+                </div>
+              ) : instructions ? (
+                <div className="space-y-6">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h2 className="text-2xl font-bold text-blue-600">{instructions.title}</h2>
+                  </div>
+                  
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <h3 className="font-bold text-green-700 mb-2">Materials Needed</h3>
+                    <p className="text-gray-700">{instructions.materials}</p>
+                  </div>
+                  
+                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                    <h3 className="font-bold text-yellow-700 mb-2">Step-by-Step Instructions</h3>
+                    <p className="text-gray-700 whitespace-pre-wrap">{instructions.instructions}</p>
+                  </div>
+                  
+                  <div className="p-4 bg-red-50 rounded-lg border border-red-100">
+                    <div className="flex items-start gap-3">
+                      <TriangleAlert className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-bold text-red-700 mb-2">Safety First!</h3>
+                        <p className="text-gray-700">{instructions.safetyPrecautions}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                  <FlaskConical className="h-10 w-10 text-gray-400 mb-4" />
+                  <p className="text-gray-500 text-center">
+                    Fill in the details on the left to create your science experiment!
+                  </p>
                 </div>
               )}
             </ScrollArea>
           </CardContent>
         </Card>
       </div>
+      
       {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" />}
     </MainLayout>
   );

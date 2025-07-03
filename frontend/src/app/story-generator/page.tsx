@@ -4,7 +4,7 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Loader2, Download, Volume2, FileDown } from 'lucide-react';
+import { Loader2, Download, Volume2, FileDown, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -23,8 +23,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const formSchema = z.object({
-  topic: z.string().min(3, { message: 'Topic must be at least 3 characters.' }),
-  gradeLevel: z.string().min(1, { message: 'Please select a grade level.' }),
+  topic: z.string().min(3, { message: 'Please enter at least 3 characters' }),
+  gradeLevel: z.string().min(1, { message: 'Please select a grade level' }),
   length: z.enum(['short', 'medium', 'long']),
 });
 
@@ -52,8 +52,8 @@ export default function StoryGeneratorPage() {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Error generating story',
-        description: error instanceof Error ? error.message : String(error),
+        title: 'Oops! Story Creation Failed',
+        description: 'We couldn\'t create your story. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -104,14 +104,30 @@ export default function StoryGeneratorPage() {
 
   return (
     <MainLayout>
-      <PageHeader title="Story Generator" description="Create engaging stories with multimedia assets for your students." />
+      <PageHeader 
+        title={
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Story Creator
+            </span>
+          </div>
+        }
+        description="Make magical stories with pictures and sounds for your students!"
+      />
+      
       <div className="grid gap-8 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Story Details</CardTitle>
-            <CardDescription>Fill in the details to generate a new story.</CardDescription>
+        {/* Left Column - Input Form */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-lg">
+            <CardTitle className="text-white">Create Your Story</CardTitle>
+            <CardDescription className="text-blue-100">
+              Tell us what your story should be about
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 space-y-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -119,109 +135,178 @@ export default function StoryGeneratorPage() {
                   name="topic"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Topic</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">What's your story about?</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., A brave knight and a friendly dragon" {...field} />
+                        <Input 
+                          placeholder="Example: A space adventure, jungle animals, a magical castle..."
+                          className="border-gray-300 focus:border-blue-500"
+                          {...field} 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="gradeLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Grade Level</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">For which grade?</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a grade level" />
+                          <SelectTrigger className="border-gray-300 focus:border-blue-500">
+                            <SelectValue placeholder="Select grade" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {[...Array(8)].map((_, i) => (
-                            <SelectItem key={i + 1} value={`${i + 1}th Grade`}>
-                              {i + 1}th Grade
+                            <SelectItem 
+                              key={i + 1} 
+                              value={`${i + 1}th Grade`}
+                              className="hover:bg-blue-50"
+                            >
+                              Grade {i + 1}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="length"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Story Length</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">How long should it be?</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="border-gray-300 focus:border-blue-500">
                             <SelectValue placeholder="Select length" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="short">Short</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="long">Long</SelectItem>
+                          <SelectItem value="short" className="hover:bg-blue-50">Short (1-2 paragraphs)</SelectItem>
+                          <SelectItem value="medium" className="hover:bg-blue-50">Medium (3-4 paragraphs)</SelectItem>
+                          <SelectItem value="long" className="hover:bg-blue-50">Long (5+ paragraphs)</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Generate Story
+                
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Creating Your Story...
+                    </>
+                  ) : (
+                    'Make My Story!'
+                  )}
                 </Button>
               </form>
             </Form>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Generated Story</CardTitle>
-            <CardDescription>The AI-generated story and assets will appear here.</CardDescription>
+        {/* Right Column - Results */}
+        <Card className="border-0 shadow-lg h-full">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-white">Your Story</CardTitle>
+                <CardDescription className="text-blue-100">
+                  {story ? 'Ready to share!' : 'Will appear here'}
+                </CardDescription>
+              </div>
+              {story && (
+                <div className="flex gap-2">
+                  {story.audioUrl && (
+                    <Button 
+                      onClick={playAudio}
+                      variant="ghost"
+                      size="icon"
+                      className="bg-white/20 hover:bg-white/30 text-white"
+                    >
+                      <Volume2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="flex-grow">
-             <div className="space-y-4">
-                {isLoading ? (
-                    <div className="space-y-4">
-                        <Skeleton className="h-[200px] w-full rounded-md" />
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-6 w-full" />
-                        <Skeleton className="h-6 w-5/6" />
+          <CardContent className="p-0 h-full">
+            <div className="space-y-4 h-full">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full p-6 space-y-4">
+                  <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+                  <p className="text-gray-600">Creating your magical story...</p>
+                  <p className="text-gray-500 text-sm">This might take a moment</p>
+                </div>
+              ) : story ? (
+                <>
+                  {story.imageUrl && (
+                    <div className="relative aspect-video w-full overflow-hidden rounded-t-lg">
+                      <Image 
+                        src={story.imageUrl} 
+                        alt="Generated story illustration" 
+                        layout="fill" 
+                        objectFit="cover"
+                        className="rounded-t-lg"
+                      />
                     </div>
-                ) : story ? (
-                    <>
-                        {story.imageUrl && (
-                            <div className="relative aspect-video w-full overflow-hidden rounded-md">
-                                <Image src={story.imageUrl} alt="Generated story illustration" layout="fill" objectFit="cover" />
-                            </div>
-                        )}
-                        <div className="flex items-center gap-4">
-                           {story.audioUrl && <Button onClick={playAudio} variant="outline" size="icon"><Volume2 className="h-4 w-4"/></Button>}
-                           <Button onClick={handleDownloadPdf} variant="outline"><FileDown className="mr-2 h-4 w-4"/>Download PDF</Button>
-                           <Button onClick={handleDownloadZip} variant="outline"><Download className="mr-2 h-4 w-4"/>Download ZIP</Button>
-                           {story.audioUrl && <audio ref={audioRef} src={story.audioUrl} preload="auto" />}
-                        </div>
-                        <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-                            <p className="whitespace-pre-wrap">{story.text}</p>
-                        </ScrollArea>
-                    </>
-                ) : (
-                    <div className="flex h-[400px] items-center justify-center rounded-md border border-dashed">
-                        <p className="text-muted-foreground">Your story will appear here.</p>
+                  )}
+                  <div className="p-4 space-y-4">
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleDownloadPdf}
+                        variant="outline"
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Save as PDF
+                      </Button>
+                      <Button 
+                        onClick={handleDownloadZip}
+                        variant="outline"
+                        className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download All
+                      </Button>
                     </div>
-                )}
-             </div>
+                    <ScrollArea className="h-[300px] w-full rounded-md border p-4 bg-gray-50">
+                      <h3 className="text-xl font-bold text-blue-600 mb-2">
+                        {form.watch('topic') || 'Your Story'}
+                      </h3>
+                      <p className="whitespace-pre-wrap text-gray-700">{story.text}</p>
+                    </ScrollArea>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                  <Sparkles className="h-10 w-10 text-gray-400 mb-4" />
+                  <p className="text-gray-500 text-center">
+                    Fill in the details on the left to create your magical story!
+                  </p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
+      
+      {story?.audioUrl && <audio ref={audioRef} src={story.audioUrl} preload="auto" className="hidden" />}
     </MainLayout>
   );
 }

@@ -4,7 +4,8 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Loader2, Copy } from 'lucide-react';
+import { Loader2, Copy, Mail, Send } from 'lucide-react';
+import jsPDF from 'jspdf';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,8 +17,8 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { PageHeader } from '@/components/page-header';
 import { composeEmail, EmailComposerOutput } from '@/ai/flows/email-composer';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Label } from '@/components/ui/label';
 
 const formSchema = z.object({
   topic: z.string().min(5, { message: 'Topic must be at least 5 characters.' }),
@@ -64,19 +65,41 @@ export default function EmailComposerPage() {
     });
   };
 
+  const handleDownloadPdf = () => {
+    if (!email) return;
+    const doc = new jsPDF();
+    const text = `Subject: ${email.subject}\n\nBody:\n${email.body}`;
+    const splitText = doc.splitTextToSize(text, 180);
+    doc.text(splitText, 10, 10);
+    doc.save('email-draft.pdf');
+  };
+
   return (
     <MainLayout>
       <PageHeader
-        title="Email Composer"
+        title={
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+              <Mail className="h-6 w-6" />
+            </div>
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Email Composer
+            </span>
+          </div>
+        }
         description="Draft professional emails for parents, students, or colleagues in seconds."
       />
+      
       <div className="grid gap-8 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Email Details</CardTitle>
-            <CardDescription>Provide the details for the email you want to generate.</CardDescription>
+        {/* Left Column - Input Form */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-lg">
+            <CardTitle className="text-white">Email Details</CardTitle>
+            <CardDescription className="text-blue-100">
+              Provide the details for the email you want to generate
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 space-y-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -84,92 +107,168 @@ export default function EmailComposerPage() {
                   name="topic"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Topic / Purpose</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">Topic / Purpose</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="e.g., Upcoming field trip to the science museum" {...field} />
+                        <Textarea 
+                          placeholder="e.g., Upcoming field trip to the science museum"
+                          className="min-h-[100px] border-gray-300 focus:border-blue-500"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-6">
-                    <FormField
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
                     control={form.control}
                     name="audience"
                     render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Audience</FormLabel>
+                      <FormItem>
+                        <FormLabel className="text-gray-700 font-medium">Audience</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                            <SelectContent>
+                          <FormControl>
+                            <SelectTrigger className="border-gray-300 focus:border-blue-500">
+                              <SelectValue placeholder="Select audience" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
                             <SelectItem value="parents">Parents</SelectItem>
                             <SelectItem value="students">Students</SelectItem>
                             <SelectItem value="colleagues">Colleagues</SelectItem>
-                            </SelectContent>
+                          </SelectContent>
                         </Select>
-                        </FormItem>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
                     )}
-                    />
-                    <FormField
+                  />
+                  <FormField
                     control={form.control}
                     name="tone"
                     render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Tone</FormLabel>
+                      <FormItem>
+                        <FormLabel className="text-gray-700 font-medium">Tone</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                            <SelectContent>
+                          <FormControl>
+                            <SelectTrigger className="border-gray-300 focus:border-blue-500">
+                              <SelectValue placeholder="Select tone" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
                             <SelectItem value="formal">Formal</SelectItem>
                             <SelectItem value="friendly">Friendly</SelectItem>
                             <SelectItem value="encouraging">Encouraging</SelectItem>
-                            </SelectContent>
+                          </SelectContent>
                         </Select>
-                        </FormItem>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
                     )}
-                    />
+                  />
                 </div>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Compose Email
+                
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Composing Email...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-5 w-5" />
+                      Compose Email
+                    </>
+                  )}
                 </Button>
               </form>
             </Form>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Generated Email Draft</CardTitle>
-            <CardDescription>Review the generated email and copy it to your email client.</CardDescription>
+        {/* Right Column - Results */}
+        <Card className="border-0 shadow-lg h-full">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-white">Generated Email</CardTitle>
+                <CardDescription className="text-blue-100">
+                  {email ? 'Ready to send!' : 'Will appear here'}
+                </CardDescription>
+              </div>
+              {email && (
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleCopy(email.subject, 'Subject')}
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/20 hover:bg-white/30 text-white"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    onClick={handleDownloadPdf}
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/20 hover:bg-white/30 text-white"
+                  >
+                    <FileDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="flex-grow space-y-4">
-            {isLoading && <div className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-40 w-full" />
-            </div>}
-            {email && (
-                <div className="space-y-4">
-                    <div>
-                        <Label htmlFor="subject">Subject</Label>
-                        <div className="flex items-center gap-2">
-                            <Input id="subject" value={email.subject} readOnly />
-                            <Button variant="outline" size="icon" onClick={() => handleCopy(email.subject, 'Subject')}><Copy className="h-4 w-4" /></Button>
-                        </div>
-                    </div>
-                    <div>
-                        <Label htmlFor="body">Body</Label>
-                         <div className="flex items-start gap-2">
-                            <Textarea id="body" value={email.body} readOnly rows={10} />
-                            <Button variant="outline" size="icon" onClick={() => handleCopy(email.body, 'Body')}><Copy className="h-4 w-4" /></Button>
-                        </div>
-                    </div>
+          <CardContent className="p-0 h-full">
+            <ScrollArea className="h-[600px] w-full p-4">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full space-y-4">
+                  <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+                  <p className="text-gray-600">Crafting your email...</p>
+                  <p className="text-gray-500 text-sm">This won't take long</p>
                 </div>
-            )}
-             {!isLoading && !email && (
-                <div className="flex items-center justify-center h-full rounded-md border border-dashed">
-                  <p className="text-muted-foreground">Your email draft will appear here.</p>
+              ) : email ? (
+                <div className="space-y-6">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h3 className="font-bold text-blue-700 mb-2">Subject</h3>
+                    <p className="text-gray-700">{email.subject}</p>
+                  </div>
+                  
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <h3 className="font-bold text-green-700 mb-2">Email Body</h3>
+                    <p className="text-gray-700 whitespace-pre-wrap">{email.body}</p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handleCopy(email.subject, 'Subject')}
+                      variant="outline"
+                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy Subject
+                    </Button>
+                    <Button 
+                      onClick={() => handleCopy(email.body, 'Body')}
+                      variant="outline"
+                      className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy Body
+                    </Button>
+                  </div>
                 </div>
-            )}
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                  <Mail className="h-10 w-10 text-gray-400 mb-4" />
+                  <p className="text-gray-500 text-center">
+                    Fill in the details on the left to generate your professional email
+                  </p>
+                </div>
+              )}
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
